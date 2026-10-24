@@ -7,9 +7,12 @@
 -- - SORT_ORDER / SORT_LABELS (upvalues of the Sort menu builder) get
 --   "last_read", so the Sort menu offers it and the saved mode is accepted;
 -- - the module's spec (upvalue of build) gets a getFileList that, in that
---   mode, puts books from KOReader's history first, newest read first.
---   Books never opened follow newest added first (file date, as the module's
---   own "Date added" sort), then by title.
+--   mode, puts books you have started first, most recently read first
+--   (KOReader's history). "Started" is SimpleUI's own rule for its progress
+--   badge: above 0%, or marked finished or abandoned — a history entry for a
+--   book with no progress (reset or never turned a page) does not count.
+--   Unread books follow newest added first (file date, as the module's own
+--   "Date added" sort), then by title.
 --
 -- Read times come from KOReader's own history (ReadHistory), the same list
 -- as History in the file manager.
@@ -70,14 +73,24 @@ local function patch(Lib)
                 if real then read_at[real] = item.time end
             end
         end
+        local okS, SH = pcall(require, "modules/module_books_shared")
+        local function started(fp)
+            if not (okS and SH.getBookData) then return true end
+            local okD, bd = pcall(SH.getBookData, fp)
+            if not okD or type(bd) ~= "table" then return true end
+            return (bd.percent or 0) > 0 or bd.status == "complete" or bd.status == "abandoned"
+        end
+        local rank = {}
         local function readTime(fp)
+            if rank[fp] ~= nil then return rank[fp] end
             local t = read_at[fp]
             if t == nil then
                 local real = realpath(fp)
                 t = real and read_at[real]
-                read_at[fp] = t or 0
             end
-            return t or 0
+            t = (t and started(fp)) and t or 0
+            rank[fp] = t
+            return t
         end
         -- Unread books: newest added first, ties in the module's title order.
         local added = {}

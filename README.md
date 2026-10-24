@@ -68,7 +68,7 @@ The patch also tidies the highlight text: it removes the book's own quotation ma
 
 Two additions to the **Flat Library** home screen module (shown as "Books"):
 
-- **Sort ▸ Last read:** books you opened most recently come first, using KOReader's reading history. Books you haven't opened follow, newest added first (the file's date, as SimpleUI's own "Date added" sort), then by title.
+- **Sort ▸ Last read:** books you've started come first, most recently read first, using KOReader's reading history. "Started" means some progress, or marked finished or abandoned, so a book you only opened, or whose progress was reset, counts as unread. Books you haven't opened follow, newest added first (the file's date, as SimpleUI's own "Date added" sort), then by title.
 - **Hide Currently Reading book:** leaves the book shown by the Currently Reading module out of the Library row, the same option Recent Books has. It appears only while Currently Reading is on the screen, and is off by default.
 
 Both are in the Flat Library module's settings.
