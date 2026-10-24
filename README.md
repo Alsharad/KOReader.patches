@@ -5,7 +5,7 @@ User patches for [SimpleUI](https://github.com/doctorhetfield-cmd/simpleui.koplu
 | Patch | What it adds |
 |---|---|
 | [`2-simpleui-quote-styles.lua`](2-simpleui-quote-styles.lua) | Three styles for your highlights in the Quote module, and a choice of what the attribution line shows |
-| [`2-simpleui-library-sort-last-read.lua`](2-simpleui-library-sort-last-read.lua) | A "Last read" sort and a "Hide Currently Reading book" option for the Flat Library module |
+| [`2-simpleui-library-sort-last-read.lua`](2-simpleui-library-sort-last-read.lua) | A "Last read" sort, "Hide books" by reading status and "Hide Currently Reading book" for the Flat Library module |
 | [`2-simpleui-opds-titlebar-button.lua`](2-simpleui-opds-titlebar-button.lua) | An OPDS catalog button in the Library title bar, next to Search |
 | [`2-simpleui-currently-stat-icons.lua`](2-simpleui-currently-stat-icons.lua) | An icon before each statistic line of the Currently Reading module |
 
@@ -66,12 +66,14 @@ The patch also tidies the highlight text: it removes the book's own quotation ma
 
 ## 2-simpleui-library-sort-last-read.lua
 
-Two additions to the **Flat Library** home screen module (shown as "Books"):
+Additions to the **Flat Library** home screen module (shown as "Books"):
 
 - **Sort ▸ Last read:** books you've started come first, most recently read first, using KOReader's reading history. "Started" means some progress, or marked finished or abandoned, so a book you only opened, or whose progress was reset, counts as unread. Books you haven't opened follow, newest added first (the file's date, as SimpleUI's own "Date added" sort), then by title.
 - **Hide Currently Reading book:** leaves the book shown by the Currently Reading module out of the Library row, the same option Recent Books has. It appears only while Currently Reading is on the screen, and is off by default.
 
-Both are in the Flat Library module's settings.
+- **Hide books:** leave books out of this row by reading status — Finished, On hold, In progress, Unread. Each is off by default and affects only this row; SimpleUI's own Finished Books setting (show, fade, hide) still applies library-wide.
+
+All are in the Flat Library module's settings, under Items.
 
 ---
 
