@@ -94,9 +94,9 @@ An icon before each statistic in the **Currently Reading** module, when its stat
 
 | Statistic | Icon |
 |---|---|
+| Time read | open book |
 | Time left | clock |
 | Days reading | calendar |
-| Time read | open book |
 
 The icons come from KOReader's built-in symbols font, at the same size and position as SimpleUI's clock, in the colour of the text. The module's **Statistics icon** setting turns them off. Percent, when shown as a separate statistic, gets no icon.
 
