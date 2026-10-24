@@ -25,6 +25,7 @@ local userpatch = require("userpatch")
 
 local ICON_REL      = "/simpleui/sui_icons/opds.svg"
 local FALLBACK_ICON = "book.opened"
+local ICON_ID       = "opds_titlebar_button"
 local BTN_KEY  = "_opds_tb_btn"
 
 local function addButton(TB, fm_self)
@@ -38,11 +39,10 @@ local function addButton(TB, fm_self)
 
     local Screen     = require("device").screen
     local IconButton = require("ui/widget/iconbutton")
-    -- Copy Search's geometry as built: its slot (width), the drawn icon box
-    -- (3.0's tabbed bar draws icons 1.37x the slot) and its tap paddings
-    -- (zero in the 2.7 classic bar, tap padding in 3.0's tabbed bar).
+    -- Copy Search's geometry as built: its slot (width), its icon scale and
+    -- edge (3.0's tabbed bar draws icons 1.37x the slot, centred on it) and
+    -- its tap paddings (zero in the 2.7 classic bar, tap padding in 3.0).
     local iw  = search.width or Screen:scaleBySize(36)
-    local box = (search.image and search.image.width) or iw
 
     local btn = IconButton:new{
         icon        = FALLBACK_ICON,
@@ -65,16 +65,22 @@ local function addButton(TB, fm_self)
     btn.padding_right  = search.padding_right  or 0
     btn.padding_top    = search.padding_top    or 0
     btn.padding_bottom = search.padding_bottom or 0
-    -- Swap the icon in place at Search's drawn size, the way SimpleUI's
-    -- applyIconToBtn does.
-    if btn.image then
-        btn.image.icon = (not path) and FALLBACK_ICON or nil
-        btn.image.file = path
-        btn.image.width, btn.image.height = box, box
-        pcall(btn.image.free, btn.image)
-        pcall(btn.image.init, btn.image)
-    end
     btn:update()
+
+    -- Draw the icon with SimpleUI's own routine, as Search's is drawn: it sizes
+    -- the icon by sui_icon_scale and centres it on the slot. The routine looks
+    -- icons up by id, so the lookup is pointed at this file for the call.
+    local icon_path = path or ("resources/icons/mdlight/" .. FALLBACK_ICON .. ".svg")
+    local okS, S = pcall(require, "features/sui_style")
+    if okS and S and S.applyIconToBtn and S.resolveIcon then
+        local orig_resolve = S.resolveIcon
+        S.resolveIcon = function(id)
+            if id == ICON_ID then return icon_path end
+            return orig_resolve(id)
+        end
+        pcall(S.applyIconToBtn, ICON_ID, btn)
+        S.resolveIcon = orig_resolve
+    end
 
     -- One Search-width step to the right; the classic bar has no tap padding,
     -- so it needs SimpleUI's 18 px button gap on top.
