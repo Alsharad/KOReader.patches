@@ -8,8 +8,8 @@
 --   "last_read", so the Sort menu offers it and the saved mode is accepted;
 -- - the module's spec (upvalue of build) gets a getFileList that, in that
 --   mode, puts books from KOReader's history first, newest read first.
---   Books never opened follow in title order (the module's fallback for an
---   unknown mode).
+--   Books never opened follow newest added first (file date, as the module's
+--   own "Date added" sort), then by title.
 --
 -- Read times come from KOReader's own history (ReadHistory), the same list
 -- as History in the file manager.
@@ -79,12 +79,20 @@ local function patch(Lib)
             end
             return t or 0
         end
-        -- Stable: unread books keep the module's title order.
+        -- Unread books: newest added first, ties in the module's title order.
+        local added = {}
+        local okL, LibraryScan = pcall(require, "engines/sui_library_scan")
+        local home = okL and LibraryScan.resolveHomeDir and LibraryScan.resolveHomeDir()
+        if home then
+            for _, r in ipairs(LibraryScan.getRaw(home) or {}) do added[r.fp] = r.mtime or 0 end
+        end
         local pos = {}
         for i, fp in ipairs(fps) do pos[fp] = i end
         table.sort(fps, function(a, b)
             local ta, tb = readTime(a), readTime(b)
             if ta ~= tb then return ta > tb end
+            local ma, mb = added[a] or 0, added[b] or 0
+            if ma ~= mb then return ma > mb end
             return pos[a] < pos[b]
         end)
         return fps
