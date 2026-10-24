@@ -7,6 +7,7 @@ User patches for [SimpleUI](https://github.com/doctorhetfield-cmd/simpleui.koplu
 | [`2-simpleui-quote-styles.lua`](2-simpleui-quote-styles.lua) | Three styles for your highlights in the Quote module, and a choice of what the attribution line shows |
 | [`2-simpleui-library-sort-last-read.lua`](2-simpleui-library-sort-last-read.lua) | A "Last read" sort and a "Hide Currently Reading book" option for the Flat Library module |
 | [`2-simpleui-opds-titlebar-button.lua`](2-simpleui-opds-titlebar-button.lua) | An OPDS catalog button in the Library title bar, next to Search |
+| [`2-simpleui-currently-stat-icons.lua`](2-simpleui-currently-stat-icons.lua) | An icon before each statistic line of the Currently Reading module |
 
 ## Requirements
 
@@ -82,6 +83,22 @@ An OPDS button in SimpleUI's Library title bar, right after Search, at the same 
 
 - **Opens:** the [OPDS Plus](https://github.com/greywolf1499/opds_plus.koplugin) catalog when that plugin is installed, otherwise KOReader's own OPDS catalog.
 - **Icon:** `koreader/settings/simpleui/sui_icons/opds.svg` if you have one (icon packs often include it), otherwise KOReader's built-in book icon.
+
+---
+
+## 2-simpleui-currently-stat-icons.lua
+
+An icon before each statistic in the **Currently Reading** module, when its statistics are shown one per line. SimpleUI itself draws a single clock, and only on the one-line (compact) style.
+
+![Currently Reading with an icon before each statistic](screenshots/currently-stat-icons.png)
+
+| Statistic | Icon |
+|---|---|
+| Time left | clock |
+| Days reading | calendar |
+| Time read | open book |
+
+The icons come from KOReader's built-in symbols font, at the same size and position as SimpleUI's clock, in the colour of the text. The module's **Statistics icon** setting turns them off. Percent, when shown as a separate statistic, gets no icon.
 
 ---
 
