@@ -70,7 +70,7 @@ Additions to the **Flat Library** home screen module (shown as "Books"):
 
 - **Sort ▸ Last read:** books you've started come first, most recently read first, using KOReader's reading history. "Started" means some progress, or marked finished or abandoned, so a book you only opened, or whose progress was reset, counts as unread. Books you haven't opened follow, newest added first (the file's date, as SimpleUI's own "Date added" sort), then by title.
 
-- **Hide books:** leave books out of this row — the **Currently Reading book** (the one the Currently Reading module already shows; listed only while that module is on the screen, the same option Recent Books has), and books by reading status: **Finished**, **On hold**, **In progress**, **Unread**. Each is off by default and affects only this row; SimpleUI's own Finished Books setting (show, fade, hide) still applies library-wide.
+- **Hide books:** leave books out of this row: **Current book** (the one the Currently Reading module shows; listed only while that module is on the screen, the same option Recent Books has), **Finished books**, **On-hold books**, **In-progress books**, **Unread books**. Each is off by default and affects only this row; SimpleUI's own Finished Books setting (show, fade, hide) still applies library-wide.
 
 All are in the Flat Library module's settings, under Items.
 
