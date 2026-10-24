@@ -17,8 +17,9 @@
 -- Read times come from KOReader's own history (ReadHistory), the same list
 -- as History in the file manager.
 --
--- The toggle mirrors Recent Books' row of the same name (shown only while
--- Currently Reading is on the screen), but under the module's own key
+-- Hide books ▸ "Current book" (shown only while Currently Reading
+-- is on the screen) mirrors Recent Books' "Hide Currently Reading book", but
+-- under the module's own key
 -- (pfx .. "flat_library_exclude_currently", default off = stock behaviour);
 -- it wraps the spec's filterItem.
 --
@@ -38,10 +39,10 @@ local MODE        = "last_read"
 local EXCLUDE_KEY = "flat_library_exclude_currently"
 local HIDE_PREFIX = "flat_library_hide_"
 local HIDE_STATUSES = {
-    { id = "finished",    label = "Finished" },
-    { id = "on_hold",     label = "On hold" },
-    { id = "in_progress", label = "In progress" },
-    { id = "unread",      label = "Unread" },
+    { id = "finished",    label = "Finished books" },
+    { id = "on_hold",     label = "On-hold books" },
+    { id = "in_progress", label = "In-progress books" },
+    { id = "unread",      label = "Unread books" },
 }
 
 local function upvalue(fn, name)
@@ -168,6 +169,18 @@ local function patch(Lib)
             return currently and Registry.isEnabled(currently, pfx)
         end)
         local hide_rows = {}
+        if okr and shown then
+            hide_rows[#hide_rows + 1] = {
+                text           = _lc("Current book"),
+                checked_func   = function() return SUISettings:isTrue(pfx .. EXCLUDE_KEY) end,
+                keep_menu_open = true,
+                separator      = true,
+                callback       = function()
+                    SUISettings:saveSetting(pfx .. EXCLUDE_KEY, not SUISettings:isTrue(pfx .. EXCLUDE_KEY))
+                    ctx_menu.refresh()
+                end,
+            }
+        end
         for _, s in ipairs(HIDE_STATUSES) do
             local key = pfx .. HIDE_PREFIX .. s.id
             hide_rows[#hide_rows + 1] = {
@@ -181,17 +194,6 @@ local function patch(Lib)
             }
         end
         table.insert(items, math.max(1, #items), { text = _lc("Hide books"), sub_item_table = hide_rows })
-        if okr and shown then
-            table.insert(items, math.max(1, #items), {
-                text           = _lc("Hide Currently Reading book"),
-                checked_func   = function() return SUISettings:isTrue(pfx .. EXCLUDE_KEY) end,
-                keep_menu_open = true,
-                callback       = function()
-                    SUISettings:saveSetting(pfx .. EXCLUDE_KEY, not SUISettings:isTrue(pfx .. EXCLUDE_KEY))
-                    ctx_menu.refresh()
-                end,
-            })
-        end
         return items
     end
     return true
