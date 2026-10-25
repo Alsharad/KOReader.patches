@@ -1,6 +1,6 @@
 # KOReader.patches
 
-User patches for [SimpleUI](https://github.com/doctorhetfield-cmd/simpleui.koplugin), the home screen and navigation plugin for KOReader.
+User patches for KOReader, most of them for [SimpleUI](https://github.com/doctorhetfield-cmd/simpleui.koplugin), the home screen and navigation plugin.
 
 | Patch | What it adds |
 |---|---|
@@ -8,13 +8,15 @@ User patches for [SimpleUI](https://github.com/doctorhetfield-cmd/simpleui.koplu
 | [`2-simpleui-library-sort-last-read.lua`](2-simpleui-library-sort-last-read.lua) | A "Last read" sort and "Hide books" (current book, or by reading status) for the Flat Library module |
 | [`2-simpleui-opds-titlebar-button.lua`](2-simpleui-opds-titlebar-button.lua) | An OPDS catalog button in the Library title bar, next to Search |
 | [`2-simpleui-currently-stat-icons.lua`](2-simpleui-currently-stat-icons.lua) | An icon before each statistic line of the Currently Reading module |
+| [`2-simpleui-series-view-exit.lua`](2-simpleui-series-view-exit.lua) | Fixes leaving a *Group by Book Series* view: the Library tab and the back arrow return to the Library again |
+| [`2-swipe-down-opens-menu.lua`](2-swipe-down-opens-menu.lua) | KOReader, no SimpleUI needed: a swipe down anywhere on the page opens the top menu |
 
 ## Requirements
 
 - KOReader v2026.07 or newer (tested on v2026.07.2)
-- SimpleUI 3.0
+- SimpleUI 3.0, for the `2-simpleui-*` patches
 
-Tested on a BOOX Note Air 5C (Android). The patches use only KOReader and SimpleUI code, so they should work on any device SimpleUI runs on.
+Tested on a BOOX Note Air 5C (Android). The patches use only KOReader and SimpleUI code, so they should work on any device KOReader (and, for the SimpleUI ones, SimpleUI) runs on.
 
 ## Install
 
@@ -100,6 +102,24 @@ An icon before each statistic in the **Currently Reading** module, when its stat
 | Days reading | calendar |
 
 The icons come from KOReader's built-in symbols font, at the same size and position as SimpleUI's clock, in the colour of the text. The module's **Statistics icon** setting turns them off. Percent, when shown as a separate statistic, gets no icon.
+
+---
+
+## 2-simpleui-series-view-exit.lua
+
+A fix for SimpleUI's **Group by Book Series**. Inside a series group, the Library tab and the title-bar back arrow should take you back to the Library, but in KOReader's cover views the series opens again straight away and the page looks stuck ([simpleui.koplugin#260](https://github.com/doctorhetfield-cmd/simpleui.koplugin/issues/260)).
+
+- **Why:** SimpleUI remembers the open series so it can return to it after a book is closed, and forgets it in a hook on the file browser's `updateItems`. KOReader's cover views (CoverBrowser) replace that function each time the Library opens, so the hook never runs and the refresh after leaving reopens the series.
+- **Fix:** going to the series' own folder (Library tab, back arrow, `..`) goes through SimpleUI's own `exitSeriesView()`, which forgets the series first. Nothing else changes.
+
+---
+
+## 2-swipe-down-opens-menu.lua
+
+A plain KOReader patch, no SimpleUI needed: a one-finger swipe down anywhere on the page opens the top menu, so it doesn't have to start at the top of the screen. Useful where a swipe from the very top edge belongs to the system, like Android's notification panel.
+
+- **Takes nothing away:** in page view a one-finger vertical swipe does nothing; page turns stay left and right.
+- **Unchanged:** scroll view (vertical swipes still scroll), edge gestures such as frontlight on the left and right edges, KOReader's own top-zone menu swipe, and PDFs and comics.
 
 ---
 
