@@ -159,7 +159,7 @@ local GAP_KEYS = { "title_gap", "author_gap", "series_gap", "desc_gap",
                    "bar_gap_before", "bar_gap_after", "pct_gap" }
 
 -- Upvalue `name` of fn — or of the function fn wraps, when another patch
--- has already wrapped it (the stat-icons patch keeps it as `orig_build`).
+-- has already wrapped it (the icons part above keeps it as `orig_build`).
 -- Returns the function that owns it, its index and its value.
 local function upvalue(fn, name, depth)
     depth = depth or 0

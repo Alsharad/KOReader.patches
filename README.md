@@ -100,7 +100,7 @@ Three changes to the **Currently Reading** module.
 
 **Statistic icons:** an icon before each statistic, when the statistics are shown one per line. SimpleUI itself draws a single clock, and only on the one-line (compact) style.
 
-![Currently Reading with an icon before each statistic](screenshots/currently-stat-icons.png)
+![Currently Reading with an icon before each statistic](screenshots/currently-icons.png)
 
 | Statistic | Icon |
 |---|---|
