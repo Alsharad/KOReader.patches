@@ -24,6 +24,15 @@
 -- attribution). Colour: SimpleUI's accent (Settings ▸ Style), grey while
 -- none is set.
 --
+-- With the module's Fixed height on (3 quote lines, the shorter quotes
+-- centred), the reserved height also counts what a style adds — the
+-- divider and its gaps, the large mark, the tinted line padding — so a
+-- three-line highlight fits in every style and the screen below never moves.
+--
+-- Also drops the module's fixed 14 px padding above the quote (SimpleUI's
+-- PAD, in build and getHeight alike): the module's Top Margin setting already
+-- sets the space above it. The 8 px below (PAD2) stays.
+--
 -- How: the module's local buildFromHighlight is replaced through
 -- debug.setupvalue (the same local is used by the Mixed sources), with the
 -- module's own pickHighlight, so the shuffled order, the 250-character
@@ -244,11 +253,22 @@ end
 
 -- A glyph cropped to its ink, so a large quotation mark takes no empty line
 -- height above and below it.
+local function codepoint(ch)
+    local b1, b2, b3 = ch:byte(1, 3)
+    if b1 < 0x80 then return b1 end
+    if b1 < 0xE0 then return (b1 - 0xC0) * 64 + (b2 - 0x80) end
+    return ((b1 - 0xE0) * 64 + (b2 - 0x80)) * 64 + (b3 - 0x80)
+end
+
 local function inkGlyph(text, face, color)
     local tw = TextWidget:new{ text = text, face = face, fgcolor = color, padding = 0 }
-    local ink = RenderText:sizeUtf8Text(0, Screen:getWidth(), face, text, true, false)
-    local top_cut = tw:getBaseline() - ink.y_top
-    local g = WidgetContainer:new{ dimen = Geom:new{ w = tw:getSize().w, h = ink.y_top + ink.y_bottom }, tw }
+    -- The glyph's own bitmap: t = its top above the baseline, height = its ink.
+    -- (sizeUtf8Text clamps the part below the baseline at 0, which for a
+    -- quotation mark — all above the baseline — keeps the empty space down
+    -- to the baseline.)
+    local glyph = RenderText:getGlyph(face, codepoint(text), false)
+    local top_cut = tw:getBaseline() - glyph.t
+    local g = WidgetContainer:new{ dimen = Geom:new{ w = tw:getSize().w, h = glyph.bb:getHeight() }, tw }
     function g:getSize() return self.dimen end
     function g:paintTo(bb, x, y)
         self.dimen.x, self.dimen.y = x, y
@@ -480,6 +500,11 @@ userpatch.registerPatchPluginFunc("simpleui", function()
     loadUI()
     local UI = require("infra/sui_core")
 
+    -- No fixed padding above the quote: Top Margin sets that space. PAD is a
+    -- module local shared by build() and getHeight(), so both follow.
+    local _, pad_idx = upvalue(Quote.build, "PAD")
+    if pad_idx then debug.setupvalue(Quote.build, pad_idx, 0) end
+
     local current_pfx = ""
     local orig_build = Quote.build
     Quote.build = function(w, ctx, ...)
@@ -523,5 +548,55 @@ userpatch.registerPatchPluginFunc("simpleui", function()
             return res
         end
     end
+    -- Fixed height: SimpleUI reserves 3 quote lines + its gap + the
+    -- attribution. A style replaces that gap with its own spacing (and the
+    -- Highlighter pads every line), so the reserve grows by the difference.
+    local orig_height = Quote.getHeight
+    local fontSizes = type(orig_height) == "function" and upvalue(orig_height, "fontSizes")
+    if fontSizes then
+        local Config = require("infra/sui_config")
+        local FIXED_LINES = 3
+        Quote.getHeight = function(ctx, ...)
+            local base = orig_height(ctx, ...)
+            local pfx = (ctx and ctx.pfx) or ""
+            local style = getStyle(pfx)
+            if style == "classic" or not SUISettings:nilOrTrue(pfx .. "simpleui_quote_fixed_height") then
+                return base
+            end
+            local okx, extra = pcall(function()
+                local lf = (ctx and ctx.landscape_factor) or (UI.isLandscape() and UI.getLandscapeFactor() or 1)
+                local scale = Config.getModuleScale("quote", pfx) * lf
+                local styles = Config.resolveTextStyles(ctx, Quote.id, Quote.text_elems)
+                local SUIStyle = require("features/sui_style")
+                -- The quote's own face, as the build resolves it: spacing follows its
+                -- pixel size, the mark its font at MARK_SCALE × its point size.
+                local qface = SUIStyle.getTextFace(styles.quote, (fontSizes(scale, styles)))
+                local fs = qface.size
+                local gap = math.max(1, math.floor(Screen:scaleBySize(4) * scale))  -- SimpleUI's quote gap
+                local attr_gap = gap + Screen:scaleBySize(4)
+                local align = SUISettings:readSetting(pfx .. "simpleui_quote_align") or "center"
+                if style == "marginalia" then
+                    if align == "center" then
+                        return 2 * math.floor(fs * 0.55) + math.max(2, Screen:scaleBySize(1.5)) - gap
+                    end
+                    return attr_gap - gap
+                elseif style == "epigraph" then
+                    if align == "center" then
+                        local mface = Font:getFace(qface.orig_font, math.floor(qface.orig_size * MARK_SCALE))
+                        local mark = inkGlyph("“", mface, nil)
+                        return mark:getSize().h + math.floor(fs * 0.35) + attr_gap - gap
+                    end
+                    return attr_gap - gap
+                end
+                -- Highlighter: every line padded, a gap between lines.
+                local pad_v, line_gap = math.floor(fs * 0.06), math.max(2, math.floor(fs * 0.2))
+                return FIXED_LINES * 2 * pad_v + (FIXED_LINES - 1) * line_gap + attr_gap - gap
+            end)
+            if okx and type(extra) == "number" then return base + math.max(0, extra) end
+            logger.warn("simpleui-quote-styles: fixed-height reserve skipped:", extra)
+            return base
+        end
+    end
+
     Quote._hl_styles_patched = true
 end)

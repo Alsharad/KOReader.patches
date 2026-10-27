@@ -8,15 +8,17 @@ User patches for KOReader, most of them for [SimpleUI](https://github.com/doctor
 | [`2-simpleui-library-sort-last-read.lua`](2-simpleui-library-sort-last-read.lua) | A "Last read" sort and "Hide books" (current book, or by reading status) for the Flat Library module |
 | [`2-simpleui-opds-titlebar-button.lua`](2-simpleui-opds-titlebar-button.lua) | An OPDS catalog button in the Library title bar, next to Search |
 | [`2-simpleui-currently-stat-icons.lua`](2-simpleui-currently-stat-icons.lua) | An icon before each statistic line of the Currently Reading module |
+| [`2-simpleui-currently-reading-tweaks.lua`](2-simpleui-currently-reading-tweaks.lua) | A Text Spacing setting for the Currently Reading module (Compact, Fit to Cover), and "Finished" in place of the percentage and time left for a book marked finished |
 | [`2-simpleui-series-view-exit.lua`](2-simpleui-series-view-exit.lua) | Fixes leaving a *Group by Book Series* view: the Library tab and the back arrow return to the Library again |
 | [`2-swipe-down-opens-menu.lua`](2-swipe-down-opens-menu.lua) | KOReader, no SimpleUI needed: a swipe down anywhere on the page opens the top menu |
+| [`2-kindle-scribe-keep-rotation.lua`](2-kindle-scribe-keep-rotation.lua) | Kindle Scribe, no SimpleUI needed: KOReader starts in the rotation it was closed in, not upside down |
 
 ## Requirements
 
 - KOReader v2026.07 or newer (tested on v2026.07.2)
 - SimpleUI 3.0, for the `2-simpleui-*` patches
 
-Tested on a BOOX Note Air 5C (Android). The patches use only KOReader and SimpleUI code, so they should work on any device KOReader (and, for the SimpleUI ones, SimpleUI) runs on.
+Tested on a BOOX Note Air 5C (Android), a Kindle Scribe and a PocketBook Era. The patches use only KOReader and SimpleUI code, so they should work on any device KOReader (and, for the SimpleUI ones, SimpleUI) runs on.
 
 ## Install
 
@@ -52,6 +54,8 @@ Long-press the Quote module (or open its settings) to find:
 
 - **Appearance ▸ Highlight style:** Classic (SimpleUI's own look), Epigraph, Marginalia, Highlighter.
 - **Content ▸ Attribution:** Book title, Author, Chapter, Date highlighted, Page. Tick any combination; the default is Book title and Author. Parts a highlight doesn't have are skipped, and untick everything to hide the line.
+
+With SimpleUI's **Fixed height** on (room for 3 quote lines, shorter quotes centred), the reserved height also counts what each style adds (the large mark, the divider and its gaps, the highlight padding), so a three-line highlight fits in every style and the modules below never move. The patch also drops the Quote module's fixed padding above the quote; the module's **Top Margin** setting sets that space.
 
 SimpleUI's own Quote settings keep working with every style:
 
@@ -105,6 +109,28 @@ The icons come from KOReader's built-in symbols font, at the same size and posit
 
 ---
 
+## 2-simpleui-currently-reading-tweaks.lua
+
+Two changes to the **Currently Reading** module.
+
+![Currently Reading with Fit to Cover spacing and a book marked finished](screenshots/currently-finished.png)
+
+**Text Spacing** (Appearance ▸ Size ▸ Text Spacing):
+
+| Option | Effect |
+|---|---|
+| Default | SimpleUI's own spacing |
+| Compact | The gaps cut to 40%, and the statistic lines trimmed to their letters |
+| Fit to Cover | The spacing adjusted on every draw so the text spans the cover's height, with an even margin above and below (4% of the cover height). Tightened when the text is taller, widened (gaps up to 3×) when shorter |
+
+Fit to Cover applies to the fixed cover layout; with Dynamic Cover Size it behaves as Default.
+
+**Finished:** a book marked finished (KOReader's *Complete*) before its last page kept showing its reading position, e.g. 92%, and a time left. Such a book now gets a full progress bar labelled *Finished*, and *Finished* in place of the time left. A book read to the end without the mark shows 100% as before.
+
+Works alongside `2-simpleui-currently-stat-icons.lua`.
+
+---
+
 ## 2-simpleui-series-view-exit.lua
 
 A fix for SimpleUI's **Group by Book Series**. Inside a series group, the Library tab and the title-bar back arrow should take you back to the Library, but in KOReader's cover views the series opens again straight away and the page looks stuck ([simpleui.koplugin#260](https://github.com/doctorhetfield-cmd/simpleui.koplugin/issues/260)).
@@ -120,6 +146,15 @@ A plain KOReader patch, no SimpleUI needed: a one-finger swipe down anywhere on 
 
 - **Takes nothing away:** in page view a one-finger vertical swipe does nothing; page turns stay left and right.
 - **Unchanged:** scroll view (vertical swipes still scroll), edge gestures such as frontlight on the left and right edges, KOReader's own top-zone menu swipe, and PDFs and comics.
+
+---
+
+## 2-kindle-scribe-keep-rotation.lua
+
+A plain KOReader patch for the **Kindle Scribe**: KOReader starts the way it was held when it closed. Without it, every start can come up upside down until you turn the Kindle around and back.
+
+- **Why:** KOReader saves the rotation on exit and restores it, but on the Scribe the start-up code then asks the Kindle's window manager for the accelerometer's orientation and uses that instead. The window manager is paused while KOReader runs, so it answers with what the Kindle's own interface last saw (upright), not how you hold it.
+- **Fix:** the saved rotation is put back before the first screen. Auto-rotation while you read is unchanged. On any other device the patch does nothing.
 
 ---
 
