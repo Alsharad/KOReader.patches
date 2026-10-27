@@ -1,8 +1,7 @@
 -- SimpleUI: Currently Reading tweaks. Three parts, applied in this order:
 -- an icon before each statistic, a "Text Spacing" setting, and "Finished" for
 -- a book marked finished. One file, so the order they wrap the module in is
--- fixed (2026-10-27: merged from 2-simpleui-currently-stat-icons.lua; if that
--- older file is still installed it sees this one and skips itself; delete it).
+-- fixed.
 --
 -- 1. Statistic icons. With Statistics style "one per line" (default), SimpleUI
 -- draws the book's statistics as plain text lines; its only icon, a clock, is
@@ -78,8 +77,6 @@ userpatch.registerPatchPluginFunc("simpleui", function()
         logger.warn("simpleui-currently-reading-tweaks (icons): SimpleUI layout changed, icons skipped")
         return
     end
-    -- The same flag as the old 2-simpleui-currently-stat-icons.lua, so only
-    -- one of the two draws icons when both are installed.
     if Cur._stat_icons_patched then return end
     Cur._stat_icons_patched = true
 

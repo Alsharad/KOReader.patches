@@ -94,7 +94,7 @@ An OPDS button in SimpleUI's Library title bar, right after Search, at the same 
 
 ## 2-simpleui-currently-reading-tweaks.lua
 
-Three changes to the **Currently Reading** module. This file replaces `2-simpleui-currently-stat-icons.lua`: if you have that one installed, delete it (while both are installed, only one draws the icons).
+Three changes to the **Currently Reading** module.
 
 ![Currently Reading with Fit to Cover spacing and a book marked finished](screenshots/currently-finished.png)
 
