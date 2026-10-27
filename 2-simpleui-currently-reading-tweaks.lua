@@ -1,6 +1,23 @@
--- SimpleUI: Currently Reading tweaks: a "Text Spacing" setting, and "Finished"
--- on the progress bar for a book marked finished (below).
+-- SimpleUI: Currently Reading tweaks. Three parts, applied in this order:
+-- an icon before each statistic, a "Text Spacing" setting, and "Finished" for
+-- a book marked finished. One file, so the order they wrap the module in is
+-- fixed (2026-10-27: merged from 2-simpleui-currently-stat-icons.lua; if that
+-- older file is still installed it sees this one and skips itself; delete it).
 --
+-- 1. Statistic icons. With Statistics style "one per line" (default), SimpleUI
+-- draws the book's statistics as plain text lines; its only icon, a clock, is
+-- drawn before the single compact line. Each line gets an icon instead:
+--   time left -> clock (SimpleUI's own clock glyph), days reading -> calendar,
+--   time read -> open book.
+-- The glyphs come from KOReader's symbols font, the same font and size as
+-- SimpleUI's clock, centred on the text line, in the line's colour. The
+-- module's "Statistics icon" switch turns them off as it does the clock.
+-- How: while the module builds, BookStats.line (called once per row) tells
+-- which statistic a row shows, and the row's text widget, made right after by
+-- UI.makeColoredText, gets the icon painted to its left. The text keeps
+-- SimpleUI's own widget, so in-place refreshes of the numbers still work.
+--
+-- 2. Text Spacing.
 -- The text column beside the cover (series, title, author, progress bar,
 -- statistics) uses fixed gaps, and each statistic line takes the font's full
 -- line height. This patch adds Appearance ▸ Size ▸ Text Spacing:
@@ -22,7 +39,7 @@
 -- module up to three times, measuring the text column against the cover.
 -- Key: pfx .. "currently_text_spacing" ("default" | "compact" | "fit").
 --
--- Also: a book marked finished (KOReader's Complete, Readest's Finished)
+-- 3. Finished. A book marked finished (KOReader's Complete, Readest's Finished)
 -- before its last page kept showing its position, e.g. 92%, on the progress
 -- bar, and a time left. Such a book gets a full bar labelled "Finished" (bar
 -- style "With percentage"), and "Finished" in place of the time left (and of
@@ -33,10 +50,107 @@
 -- updateStats() says whether the book being drawn is marked finished
 -- (added 2026-10-27).
 --
--- Hooks by folder name "simpleui". Written 2026-10-26 for SimpleUI 3.0 on
--- KOReader v2026.07.2. Works alongside 2-simpleui-currently-stat-icons.lua.
+-- Hooks by folder name "simpleui". Text Spacing written 2026-10-26, the
+-- icons 2026-10-24, the Finished label 2026-10-27, for SimpleUI 3.0 on
+-- KOReader v2026.07.2.
 
 local userpatch = require("userpatch")
+
+-- 1. Statistic icons ------------------------------------------------------
+
+local ICONS = {
+    book_remaining = "\u{E84F}", -- clock
+    book_days      = "\u{E7EC}", -- calendar
+    book_time      = "\u{E7BD}", -- book-open-variant
+}
+local ICON_SCALE = 1.1  -- glyph size relative to the text, as SimpleUI's clock
+local GAP_SCALE  = 0.5  -- icon-to-text gap relative to the text size
+
+userpatch.registerPatchPluginFunc("simpleui", function()
+    local logger = require("logger")
+    local okC, Cur       = pcall(require, "modules/module_currently")
+    local okB, BookStats = pcall(require, "infra/sui_book_stats")
+    local okU, UI        = pcall(require, "infra/sui_core")
+    local okS, SUIStyle  = pcall(require, "features/sui_style")
+    if not (okC and okB and okU and okS and type(Cur) == "table" and type(Cur.build) == "function"
+            and type(BookStats.line) == "function" and type(UI.makeColoredText) == "function"
+            and SUIStyle.pxFace and SUIStyle.FACE_ICONS) then
+        logger.warn("simpleui-currently-reading-tweaks (icons): SimpleUI layout changed, icons skipped")
+        return
+    end
+    -- The same flag as the old 2-simpleui-currently-stat-icons.lua, so only
+    -- one of the two draws icons when both are installed.
+    if Cur._stat_icons_patched then return end
+    Cur._stat_icons_patched = true
+
+    local SUISettings = require("infra/sui_store")
+    local Geom        = require("ui/geometry")
+
+    local building, pending = false, nil
+
+    local orig_line = BookStats.line
+    BookStats.line = function(order, ...)
+        if building and type(order) == "table" and #order == 1 then pending = order[1] end
+        return orig_line(order, ...)
+    end
+
+    -- The row's text widget with `glyph` painted before it.
+    local function withIcon(orig_text, args, glyph, ...)
+        local face      = args.face
+        local icon_face = SUIStyle.pxFace(SUIStyle.FACE_ICONS, face.size * ICON_SCALE)
+        local icon      = orig_text({ text = glyph, face = icon_face, fgcolor = args.fgcolor, padding = 0 })
+        local icon_w    = icon:getSize().w
+        local gap       = math.floor(face.size * GAP_SCALE)
+        local nudge     = SUIStyle.inkCentreShift and SUIStyle.inkCentreShift(icon_face, glyph, false) or 0
+
+        local opts = {}
+        for k, v in pairs(args) do opts[k] = v end
+        if opts.max_width then opts.max_width = math.max(1, opts.max_width - icon_w - gap) end
+        local tw = orig_text(opts, ...)
+
+        local text_size, text_paint = tw.getSize, tw.paintTo
+        tw.getSize = function(self)
+            local s = text_size(self)
+            return Geom:new{ w = s.w + icon_w + gap, h = s.h }
+        end
+        tw.paintTo = function(self, bb, x, y)
+            local h  = text_size(self).h
+            local ih = icon:getSize().h
+            icon:paintTo(bb, x, y + math.floor((h - ih) / 2) + nudge)
+            text_paint(self, bb, x + icon_w + gap, y)
+        end
+        return tw
+    end
+
+    local orig_text = UI.makeColoredText
+    UI.makeColoredText = function(args, ...)
+        local id = pending
+        if not (building and id and type(args) == "table" and args.truncate_with_ellipsis and args.face) then
+            return orig_text(args, ...)
+        end
+        pending = nil
+        local glyph = ICONS[id]
+        if not glyph then return orig_text(args, ...) end
+        local ok, w = pcall(withIcon, orig_text, args, glyph, ...)
+        if ok then return w end
+        logger.warn("simpleui-currently-reading-tweaks (icons): icon skipped:", w)
+        return orig_text(args, ...)
+    end
+
+    local function finish(ok, ...)
+        building, pending = false, nil
+        if not ok then error((...), 0) end
+        return ...
+    end
+    local orig_build = Cur.build
+    Cur.build = function(w, ctx, ...)
+        local pfx = (ctx and ctx.pfx) or ""
+        building, pending = SUISettings:nilOrTrue(pfx .. "currently_stats_icon"), nil
+        return finish(pcall(orig_build, w, ctx, ...))
+    end
+end)
+
+-- 2. Text Spacing ---------------------------------------------------------
 
 local KEY          = "currently_text_spacing"
 local COMPACT_GAP  = 0.4   -- Compact: gap multiplier
@@ -296,7 +410,7 @@ userpatch.registerPatchPluginFunc("simpleui", function()
     end
 end)
 
--- "Finished" on the progress bar for a book marked finished (see header).
+-- 3. Finished ---------------------------------------------------------------
 local LABEL = "Finished"
 
 userpatch.registerPatchPluginFunc("simpleui", function()

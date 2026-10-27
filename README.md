@@ -7,8 +7,7 @@ User patches for KOReader, most of them for [SimpleUI](https://github.com/doctor
 | [`2-simpleui-quote-styles.lua`](2-simpleui-quote-styles.lua) | Three styles for your highlights in the Quote module, and a choice of what the attribution line shows |
 | [`2-simpleui-library-sort-last-read.lua`](2-simpleui-library-sort-last-read.lua) | A "Last read" sort and "Hide books" (current book, or by reading status) for the Flat Library module |
 | [`2-simpleui-opds-titlebar-button.lua`](2-simpleui-opds-titlebar-button.lua) | An OPDS catalog button in the Library title bar, next to Search |
-| [`2-simpleui-currently-stat-icons.lua`](2-simpleui-currently-stat-icons.lua) | An icon before each statistic line of the Currently Reading module |
-| [`2-simpleui-currently-reading-tweaks.lua`](2-simpleui-currently-reading-tweaks.lua) | A Text Spacing setting for the Currently Reading module (Compact, Fit to Cover), and "Finished" in place of the percentage and time left for a book marked finished |
+| [`2-simpleui-currently-reading-tweaks.lua`](2-simpleui-currently-reading-tweaks.lua) | For the Currently Reading module: an icon before each statistic, a Text Spacing setting (Compact, Fit to Cover), and "Finished" in place of the percentage and time left for a book marked finished |
 | [`2-simpleui-series-view-exit.lua`](2-simpleui-series-view-exit.lua) | Fixes leaving a *Group by Book Series* view: the Library tab and the back arrow return to the Library again |
 | [`2-swipe-down-opens-menu.lua`](2-swipe-down-opens-menu.lua) | KOReader, no SimpleUI needed: a swipe down anywhere on the page opens the top menu |
 | [`2-kindle-scribe-keep-rotation.lua`](2-kindle-scribe-keep-rotation.lua) | Kindle Scribe, no SimpleUI needed: KOReader starts in the rotation it was closed in, not upside down |
@@ -93,9 +92,13 @@ An OPDS button in SimpleUI's Library title bar, right after Search, at the same 
 
 ---
 
-## 2-simpleui-currently-stat-icons.lua
+## 2-simpleui-currently-reading-tweaks.lua
 
-An icon before each statistic in the **Currently Reading** module, when its statistics are shown one per line. SimpleUI itself draws a single clock, and only on the one-line (compact) style.
+Three changes to the **Currently Reading** module. This file replaces `2-simpleui-currently-stat-icons.lua`: if you have that one installed, delete it (while both are installed, only one draws the icons).
+
+![Currently Reading with Fit to Cover spacing and a book marked finished](screenshots/currently-finished.png)
+
+**Statistic icons:** an icon before each statistic, when the statistics are shown one per line. SimpleUI itself draws a single clock, and only on the one-line (compact) style.
 
 ![Currently Reading with an icon before each statistic](screenshots/currently-stat-icons.png)
 
@@ -106,14 +109,6 @@ An icon before each statistic in the **Currently Reading** module, when its stat
 | Days reading | calendar |
 
 The icons come from KOReader's built-in symbols font, at the same size and position as SimpleUI's clock, in the colour of the text. The module's **Statistics icon** setting turns them off. Percent, when shown as a separate statistic, gets no icon.
-
----
-
-## 2-simpleui-currently-reading-tweaks.lua
-
-Two changes to the **Currently Reading** module.
-
-![Currently Reading with Fit to Cover spacing and a book marked finished](screenshots/currently-finished.png)
 
 **Text Spacing** (Appearance ▸ Size ▸ Text Spacing):
 
@@ -126,8 +121,6 @@ Two changes to the **Currently Reading** module.
 Fit to Cover applies to the fixed cover layout; with Dynamic Cover Size it behaves as Default.
 
 **Finished:** a book marked finished (KOReader's *Complete*) before its last page kept showing its reading position, e.g. 92%, and a time left. Such a book now gets a full progress bar labelled *Finished*, and *Finished* in place of the time left. A book read to the end without the mark shows 100% as before.
-
-Works alongside `2-simpleui-currently-stat-icons.lua`.
 
 ---
 
